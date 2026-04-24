@@ -1,0 +1,56 @@
+/* === TubesBackground === */
+
+.tubes-bg-wrapper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: crosshair;
+}
+
+.tubes-bg-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+/* subtle dark vignette so the chat UI on top stays readable */
+.tubes-bg-fade {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 30%,
+    rgba(33, 33, 33, 0.55) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  pointer-events: none;
+}
+
+.tubes-bg-fade--visible {
+  opacity: 1;
+}
+
+/* Content (children) floats above the canvas */
+.tubes-bg-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* Let clicks pass to canvas for randomization */
+}
+
+/* Allow interaction with any UI components placed inside the background */
+.tubes-bg-content > * {
+  pointer-events: auto;
+}
+

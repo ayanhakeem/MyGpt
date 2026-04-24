@@ -1,17 +1,26 @@
 import "./Sidebar.css";
 import { useContext, useEffect } from "react";
 import { MyContext } from "./MyContext.jsx";
-import {v1 as uuidv1} from "uuid";
+import { v1 as uuidv1 } from "uuid";
 
 function Sidebar() {
-    const {allThreads, setAllThreads, currThreadId, setNewChat, setPrompt, setReply, setCurrThreadId, setPrevChats} = useContext(MyContext);
+    const {allThreads, setAllThreads, currThreadId, setNewChat, setPrompt, setReply, setCurrThreadId, setPrevChats, token} = useContext(MyContext);
 
     const getAllThreads = async () => {
         try {
-            const response = await fetch("http://localhost:8080/api/thread");
+            const response = await fetch("/api/thread", {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
             const res = await response.json();
-            const filteredData = res.map(thread => ({threadId: thread.threadId, title: thread.title}));
-            //console.log(filteredData);
+            
+            if (response.status === 401) {
+                // Token might be expired, logout would be handled by App or here
+                return;
+            }
+
+            const filteredData = Array.isArray(res) ? res.map(thread => ({threadId: thread.threadId, title: thread.title})) : [];
             setAllThreads(filteredData);
         } catch(err) {
             console.log(err);
@@ -19,9 +28,10 @@ function Sidebar() {
     };
 
     useEffect(() => {
-        getAllThreads();
-    }, [currThreadId])
-
+        if (token) {
+            getAllThreads();
+        }
+    }, [currThreadId, token]);
 
     const createNewChat = () => {
         setNewChat(true);
@@ -29,73 +39,82 @@ function Sidebar() {
         setReply(null);
         setCurrThreadId(uuidv1());
         setPrevChats([]);
-    }
+    };
 
     const changeThread = async (newThreadId) => {
         setCurrThreadId(newThreadId);
-
         try {
-            const response = await fetch(`http://localhost:8080/api/thread/${newThreadId}`);
+            const response = await fetch(`/api/thread/${newThreadId}`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
             const res = await response.json();
-            console.log(res);
             setPrevChats(res);
             setNewChat(false);
             setReply(null);
         } catch(err) {
             console.log(err);
         }
-    }   
+    };
 
     const deleteThread = async (threadId) => {
         try {
-            const response = await fetch(`http://localhost:8080/api/thread/${threadId}`, {method: "DELETE"});
-            const res = await response.json();
-            console.log(res);
-
-            //updated threads re-render
+            await fetch(`/api/thread/${threadId}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
             setAllThreads(prev => prev.filter(thread => thread.threadId !== threadId));
-
-            if(threadId === currThreadId) {
-                createNewChat();
-            }
-
+            if(threadId === currThreadId) createNewChat();
         } catch(err) {
             console.log(err);
         }
-    }
+    };
 
     return (
         <section className="sidebar">
-            <button onClick={createNewChat}>
-                <img src="src/assets/blacklogo.png" alt="gpt logo" className="logo"></img>
-                <span><i className="fa-solid fa-pen-to-square"></i></span>
-            </button>
+            <div className="sidebar-header">
+                <button className="new-chat-btn" onClick={createNewChat}>
+                    <div className="btn-brand">
+                        <div className="logo-orb">M</div>
+                        <span>MyGPT</span>
+                    </div>
+                    <span className="btn-icon">
+                        <i className="fa-solid fa-pen-to-square"></i>
+                    </span>
+                </button>
+            </div>
 
+            {allThreads?.length > 0 && (
+                <p className="history-label">Recent</p>
+            )}
 
             <ul className="history">
-                {
-                    allThreads?.map((thread, idx) => (
-                        <li key={idx} 
-                            onClick={(e) => changeThread(thread.threadId)}
-                            className={thread.threadId === currThreadId ? "highlighted": " "}
-                        >
-                            {thread.title}
-                            <i className="fa-solid fa-trash"
-                                onClick={(e) => {
-                                    e.stopPropagation(); //stop event bubbling
-                                    deleteThread(thread.threadId);
-                                }}
-                            ></i>
-                        </li>
-                    ))
-                }
+                {allThreads?.map((thread, idx) => (
+                    <li
+                        key={idx}
+                        onClick={() => changeThread(thread.threadId)}
+                        className={thread.threadId === currThreadId ? "highlighted" : ""}
+                    >
+                        <span className="thread-title">{thread.title}</span>
+                        <i
+                            className="fa-solid fa-trash"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                deleteThread(thread.threadId);
+                            }}
+                        ></i>
+                    </li>
+                ))}
             </ul>
- 
+
             <div className="sign">
-                <p>By ApnaCollege &hearts;</p>
+                <span className="sign-by">Made by Ayan</span>
             </div>
         </section>
-    )
+    );
 }
 
 export default Sidebar;
