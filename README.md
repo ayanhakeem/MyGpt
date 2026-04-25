@@ -2,7 +2,7 @@
 
 A premium, glassmorphic AI chat application built with React, Node.js, and Gen-AI models. MyGPT offers a sleek, modern interface with real-time AI responses, secure authentication, and a dynamic 3D-inspired background.
 
-![MyGPT Preview](https://via.placeholder.com/1200x600/0f0f0f/ffffff?text=MyGPT+Premium+AI+Interface)
+
 
 ## 🚀 Features
 - **✨ Premium UI/UX**: Stunning glassmorphic design with dynamic "Tubes" background animations.
